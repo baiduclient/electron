@@ -1,6 +1,7 @@
 .DS_Store
 .tags*
 /.idea/
+/atom/quentum/.svn
 /build/
 /dist/
 /external_binaries/
@@ -15,6 +16,7 @@
 /vendor/.gclient
 node_modules/
 *.xcodeproj
+*.xcworkspace
 *.swp
 *.pyc
 debug.log
