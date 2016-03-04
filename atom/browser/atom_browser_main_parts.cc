@@ -4,6 +4,7 @@
 
 #include "atom/browser/atom_browser_main_parts.h"
 
+#include "atom/quentum/quentum_main.h"
 #include "atom/browser/api/trackable_object.h"
 #include "atom/browser/atom_browser_client.h"
 #include "atom/browser/atom_browser_context.h"
@@ -141,6 +142,8 @@ void AtomBrowserMainParts::PreMainMessageLoopRun() {
   Browser::Get()->WillFinishLaunching();
   Browser::Get()->DidFinishLaunching();
 #endif
+
+  quentum::QuentumMainStart();
 }
 
 bool AtomBrowserMainParts::MainMessageLoopRun(int* result_code) {
@@ -156,6 +159,8 @@ void AtomBrowserMainParts::PostMainMessageLoopStart() {
 }
 
 void AtomBrowserMainParts::PostMainMessageLoopRun() {
+  quentum::QuentumMainStop();
+
   brightray::BrowserMainParts::PostMainMessageLoopRun();
 
 #if defined(OS_MACOSX)
