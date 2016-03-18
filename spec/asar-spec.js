@@ -17,7 +17,7 @@ describe('asar package', function() {
       it('does not leak fd', function() {
         var readCalls = 1;
         while(readCalls <= 10000) {
-          fs.readFileSync(path.join(process.resourcesPath, 'atom.asar', 'renderer', 'api', 'lib', 'ipc.js'));
+          fs.readFileSync(path.join(process.resourcesPath, 'atom.asar', 'renderer', 'api', 'ipc.js'));
           readCalls++;
         }
       });
@@ -317,6 +317,13 @@ describe('asar package', function() {
         assert.equal(r, path.join(parent, 'a.asar', 'dir1'));
       });
 
+      it('returns real path of an unpacked file', function() {
+        var parent = fs.realpathSync(path.join(fixtures, 'asar'));
+        var p = path.join('unpack.asar', 'a.txt');
+        var r = fs.realpathSync(path.join(parent, p));
+        assert.equal(r, path.join(parent, p));
+      });
+
       it('throws ENOENT error when can not find file', function() {
         var parent = fs.realpathSync(path.join(fixtures, 'asar'));
         var p = path.join('a.asar', 'not-exist');
@@ -377,6 +384,17 @@ describe('asar package', function() {
           done();
         });
       });
+
+      it('returns real path of an unpacked file', function(done) {
+        var parent = fs.realpathSync(path.join(fixtures, 'asar'));
+        var p = path.join('unpack.asar', 'a.txt');
+        fs.realpath(path.join(parent, p), function(err, r) {
+          assert.equal(err, null);
+          assert.equal(r, path.join(parent, p));
+          done();
+        });
+      });
+
       it('throws ENOENT error when can not find file', function(done) {
         var parent = fs.realpathSync(path.join(fixtures, 'asar'));
         var p = path.join('a.asar', 'not-exist');

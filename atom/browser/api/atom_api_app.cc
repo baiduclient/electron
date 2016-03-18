@@ -132,19 +132,20 @@ void OnClientCertificateSelected(
     std::shared_ptr<content::ClientCertificateDelegate> delegate,
     mate::Arguments* args) {
   mate::Dictionary cert_data;
-  if (!(args->Length() == 1 && args->GetNext(&cert_data))) {
+  if (!args->GetNext(&cert_data)) {
     args->ThrowError();
     return;
   }
 
-  std::string encoded_data;
-  cert_data.Get("data", &encoded_data);
+  v8::Local<v8::Object> data;
+  if (!cert_data.Get("data", &data))
+    return;
 
-  auto certs =
-      net::X509Certificate::CreateCertificateListFromBytes(
-          encoded_data.data(), encoded_data.size(),
-          net::X509Certificate::FORMAT_AUTO);
-  delegate->ContinueWithCertificate(certs[0].get());
+  auto certs = net::X509Certificate::CreateCertificateListFromBytes(
+      node::Buffer::Data(data), node::Buffer::Length(data),
+      net::X509Certificate::FORMAT_AUTO);
+  if (certs.size() > 0)
+    delegate->ContinueWithCertificate(certs[0].get());
 }
 
 void PassLoginInformation(scoped_refptr<LoginHandler> login_handler,
@@ -229,8 +230,7 @@ void App::OnLogin(LoginHandler* login_handler) {
 }
 
 void App::AllowCertificateError(
-    int pid,
-    int fid,
+    content::WebContents* web_contents,
     int cert_error,
     const net::SSLInfo& ssl_info,
     const GURL& request_url,
@@ -240,9 +240,6 @@ void App::AllowCertificateError(
     bool expired_previous_decision,
     const base::Callback<void(bool)>& callback,
     content::CertificateRequestResultType* request) {
-  auto rfh = content::RenderFrameHost::FromID(pid, fid);
-  auto web_contents = content::WebContents::FromRenderFrameHost(rfh);
-
   v8::Locker locker(isolate());
   v8::HandleScope handle_scope(isolate());
   bool prevent_default = Emit("certificate-error",
@@ -281,6 +278,12 @@ void App::SelectClientCertificate(
 void App::OnGpuProcessCrashed(base::TerminationStatus exit_code) {
   Emit("gpu-process-crashed");
 }
+
+#if defined(OS_MACOSX)
+void App::OnPlatformThemeChanged() {
+  Emit("platform-theme-changed");
+}
+#endif
 
 base::FilePath App::GetPath(mate::Arguments* args, const std::string& name) {
   bool succeed = false;
@@ -370,6 +373,8 @@ mate::ObjectTemplateBuilder App::GetObjectTemplateBuilder(
 #if defined(OS_MACOSX)
       .SetMethod("hide", base::Bind(&Browser::Hide, browser))
       .SetMethod("show", base::Bind(&Browser::Show, browser))
+      .SetMethod("isDarkMode",
+                 base::Bind(&Browser::IsDarkMode, browser))
 #endif
 #if defined(OS_WIN)
       .SetMethod("setUserTasks",

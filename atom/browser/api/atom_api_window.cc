@@ -191,6 +191,14 @@ void Window::OnWindowFocus() {
   Emit("focus");
 }
 
+void Window::OnWindowShow() {
+  Emit("show");
+}
+
+void Window::OnWindowHide() {
+  Emit("hide");
+}
+
 void Window::OnWindowMaximize() {
   Emit("maximize");
 }
@@ -292,6 +300,10 @@ void Window::Close() {
 
 void Window::Focus() {
   window_->Focus(true);
+}
+
+void Window::Blur() {
+  window_->Focus(false);
 }
 
 bool Window::IsFocused() {
@@ -688,6 +700,7 @@ void Window::BuildPrototype(v8::Isolate* isolate,
       .MakeDestroyable()
       .SetMethod("close", &Window::Close)
       .SetMethod("focus", &Window::Focus)
+      .SetMethod("blur", &Window::Blur)
       .SetMethod("isFocused", &Window::IsFocused)
       .SetMethod("show", &Window::Show)
       .SetMethod("showInactive", &Window::ShowInactive)

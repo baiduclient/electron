@@ -120,13 +120,54 @@ describe('browser-window module', function() {
   });
 
   describe('BrowserWindow.show()', function() {
-    it('should focus on window', function() {
-      if (isCI) {
-        return;
-      }
+    if (isCI) {
+      return;
+    }
 
+    it('should focus on window', function() {
       w.show();
       assert(w.isFocused());
+    });
+
+    it('should make the window visible', function() {
+      w.show();
+      assert(w.isVisible());
+    });
+
+    it('emits when window is shown', function(done) {
+      this.timeout(10000);
+      w.once('show', function() {
+        assert.equal(w.isVisible(), true);
+        done();
+      });
+      w.show();
+    });
+  });
+
+  describe('BrowserWindow.hide()', function() {
+    if (isCI) {
+      return;
+    }
+
+    it('should defocus on window', function() {
+      w.hide();
+      assert(!w.isFocused());
+    });
+
+    it('should make the window not visible', function() {
+      w.show();
+      w.hide();
+      assert(!w.isVisible());
+    });
+
+    it('emits when window is hidden', function(done) {
+      this.timeout(10000);
+      w.show();
+      w.once('hide', function() {
+        assert.equal(w.isVisible(), false);
+        done();
+      });
+      w.hide();
     });
   });
 
@@ -142,6 +183,13 @@ describe('browser-window module', function() {
       assert.equal(w.isVisible(), false);
       w.focus();
       assert.equal(w.isVisible(), false);
+    });
+  });
+
+  describe('BrowserWindow.blur()', function() {
+    it('removes focus from window', function() {
+      w.blur();
+      assert(!w.isFocused());
     });
   });
 
@@ -528,6 +576,24 @@ describe('browser-window module', function() {
   });
 
   describe('window states', function() {
+    describe('resizable state', function() {
+      it('can be changed with resizable option', function() {
+        w.destroy();
+        w = new BrowserWindow({show: false, resizable: false});
+        assert.equal(w.isResizable(), false);
+      });
+
+      it('can be changed with setResizable method', function() {
+        assert.equal(w.isResizable(), true);
+        w.setResizable(false);
+        assert.equal(w.isResizable(), false);
+        w.setResizable(true);
+        assert.equal(w.isResizable(), true);
+      });
+    });
+  });
+
+  describe('window states (excluding Linux)', function() {
     // Not implemented on Linux.
     if (process.platform == 'linux')
       return;
@@ -622,22 +688,6 @@ describe('browser-window module', function() {
         assert.equal(w.isClosable(), false);
         w.setClosable(true);
         assert.equal(w.isClosable(), true);
-      });
-    });
-
-    describe('resizable state', function() {
-      it('can be changed with resizable option', function() {
-        w.destroy();
-        w = new BrowserWindow({show: false, resizable: false});
-        assert.equal(w.isResizable(), false);
-      });
-
-      it('can be changed with setResizable method', function() {
-        assert.equal(w.isResizable(), true);
-        w.setResizable(false);
-        assert.equal(w.isResizable(), false);
-        w.setResizable(true);
-        assert.equal(w.isResizable(), true);
       });
     });
 

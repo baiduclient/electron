@@ -85,7 +85,7 @@ scoped_ptr<const char*[]> StringVectorToArgArray(
   for (size_t i = 0; i < vector.size(); ++i) {
     array[i] = vector[i].c_str();
   }
-  return array.Pass();
+  return array;
 }
 
 base::FilePath GetResourcesPath(bool is_browser) {
@@ -165,7 +165,6 @@ node::Environment* NodeBindings::CreateEnvironment(
   base::FilePath script_path =
       resources_path.Append(FILE_PATH_LITERAL("atom.asar"))
                     .Append(process_type)
-                    .Append(FILE_PATH_LITERAL("lib"))
                     .Append(FILE_PATH_LITERAL("init.js"));
   std::string script_path_str = script_path.AsUTF8Unsafe();
   args.insert(args.begin() + 1, script_path_str.c_str());

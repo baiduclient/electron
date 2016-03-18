@@ -52,8 +52,7 @@ class App : public AtomBrowserClient::Delegate,
 
   // content::ContentBrowserClient:
   void AllowCertificateError(
-      int render_process_id,
-      int render_frame_id,
+      content::WebContents* web_contents,
       int cert_error,
       const net::SSLInfo& ssl_info,
       const GURL& request_url,
@@ -70,6 +69,10 @@ class App : public AtomBrowserClient::Delegate,
 
   // content::GpuDataManagerObserver:
   void OnGpuProcessCrashed(base::TerminationStatus exit_code) override;
+
+#if defined(OS_MACOSX)
+  void OnPlatformThemeChanged() override;
+#endif
 
   // mate::Wrappable:
   mate::ObjectTemplateBuilder GetObjectTemplateBuilder(

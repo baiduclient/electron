@@ -4,6 +4,9 @@
 
 #include "atom/browser/atom_permission_manager.h"
 
+#include <vector>
+
+#include "atom/browser/web_contents_preferences.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/permission_type.h"
 #include "content/public/browser/render_frame_host.h"
@@ -15,17 +18,12 @@ namespace atom {
 
 namespace {
 
-// Must be kept in sync with atom_browser_client.cc
-int kDefaultRoutingID = 2;
-
 bool WebContentsDestroyed(int process_id) {
-  auto rvh = content::RenderViewHost::FromID(process_id, kDefaultRoutingID);
-  if (rvh) {
-    auto contents = content::WebContents::FromRenderViewHost(rvh);
-    return contents->IsBeingDestroyed();
-  }
-
-  return true;
+  auto contents =
+      WebContentsPreferences::GetWebContentsFromProcessID(process_id);
+  if (!contents)
+    return true;
+  return contents->IsBeingDestroyed();
 }
 
 }  // namespace
@@ -77,6 +75,26 @@ int AtomPermissionManager::RequestPermission(
   }
 
   response_callback.Run(content::PERMISSION_STATUS_GRANTED);
+  return kNoPendingOperation;
+}
+
+int AtomPermissionManager::RequestPermissions(
+    const std::vector<content::PermissionType>& permissions,
+    content::RenderFrameHost* render_frame_host,
+    const GURL& requesting_origin,
+    bool user_gesture,
+    const base::Callback<void(
+    const std::vector<content::PermissionStatus>&)>& callback) {
+  // FIXME(zcbenz): Just ignore multiple permissions request for now.
+  std::vector<content::PermissionStatus> permissionStatuses;
+  for (auto permission : permissions) {
+    if (permission == content::PermissionType::MIDI_SYSEX) {
+      content::ChildProcessSecurityPolicy::GetInstance()->
+          GrantSendMidiSysExMessage(render_frame_host->GetProcess()->GetID());
+    }
+    permissionStatuses.push_back(content::PERMISSION_STATUS_GRANTED);
+  }
+  callback.Run(permissionStatuses);
   return kNoPendingOperation;
 }
 

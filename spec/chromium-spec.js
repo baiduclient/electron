@@ -7,6 +7,8 @@ const remote = require('electron').remote;
 const BrowserWindow = remote.require('electron').BrowserWindow;
 const session = remote.require('electron').session;
 
+const isCI = remote.getGlobal('isCi');
+
 describe('chromium feature', function() {
   var fixtures = path.resolve(__dirname, 'fixtures');
   var listener = null;
@@ -91,13 +93,19 @@ describe('chromium feature', function() {
     if (process.env.TRAVIS === 'true') {
       return;
     }
+    if (isCI && process.platform === 'linux') {
+      return;
+    }
 
     it('can return labels of enumerated devices', function(done) {
       navigator.mediaDevices.enumerateDevices().then((devices) => {
-        const result = devices.some((device) => !!device.label);
-        if (result)
+        const labels = devices.map((device) => device.label);
+        const labelFound = labels.some((label) => !!label);
+        if (labelFound)
           done();
-      });
+        else
+          done('No device labels found: ' + JSON.stringify(labels));
+      }).catch(done);
     });
   });
 
@@ -184,6 +192,32 @@ describe('chromium feature', function() {
       };
       window.addEventListener('message', listener);
       b = window.open("file://" + fixtures + "/pages/window-open-size.html", '', "show=no,width=" + size.width + ",height=" + size.height);
+    });
+
+    it('defines a window.location getter', function(done) {
+      var b, targetURL;
+      targetURL = "file://" + fixtures + "/pages/base-page.html";
+      b = window.open(targetURL);
+      BrowserWindow.fromId(b.guestId).webContents.once('did-finish-load', function() {
+        assert.equal(b.location, targetURL);
+        b.close();
+        done();
+      });
+    });
+
+    it('defines a window.location setter', function(done) {
+      // Load a page that definitely won't redirect
+      var b;
+      b = window.open("about:blank");
+      BrowserWindow.fromId(b.guestId).webContents.once('did-finish-load', function() {
+        // When it loads, redirect
+        b.location = "file://" + fixtures + "/pages/base-page.html";
+        BrowserWindow.fromId(b.guestId).webContents.once('did-finish-load', function() {
+          // After our second redirect, cleanup and callback
+          b.close();
+          done();
+        });
+      });
     });
   });
 

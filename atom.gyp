@@ -4,7 +4,7 @@
     'product_name%': 'Electron',
     'company_name%': 'GitHub, Inc',
     'company_abbr%': 'github',
-    'version%': '0.36.9',
+    'version%': '0.37.2',
   },
   'includes': [
     'filenames.gypi',
@@ -69,7 +69,7 @@
             {
               'destination': '<(PRODUCT_DIR)/<(product_name).app/Contents/Resources',
               'files': [
-                'atom/browser/default_app',
+                'default_app',
               ],
             },
           ],
@@ -143,7 +143,6 @@
                     ],
                   }, {
                     'copied_libraries': [
-                      '<(libchromiumcontent_dir)/pdf.dll',
                       '<(libchromiumcontent_dir)/ffmpeg.dll',
                     ],
                   }],
@@ -171,7 +170,7 @@
             {
               'destination': '<(PRODUCT_DIR)/resources',
               'files': [
-                'atom/browser/default_app',
+                'default_app',
               ]
             },
           ],
@@ -212,7 +211,7 @@
             {
               'destination': '<(PRODUCT_DIR)/resources',
               'files': [
-                'atom/browser/default_app',
+                'default_app',
               ]
             },
           ],
@@ -490,7 +489,7 @@
               'action': [
                 'install_name_tool',
                 '-change',
-                '@loader_path/libffmpeg.dylib',
+                '/usr/local/lib/libffmpeg.dylib',
                 '@rpath/libffmpeg.dylib',
                 '${BUILT_PRODUCTS_DIR}/<(product_name) Framework.framework/Versions/A/<(product_name) Framework',
               ],

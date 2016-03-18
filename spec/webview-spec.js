@@ -548,11 +548,10 @@ describe('<webview> tag', function() {
   });
 
   describe('executeJavaScript', function() {
-    if (process.env.TRAVIS !== 'true') {
-      return;
-    }
-
     it('should support user gesture', function(done) {
+      if (process.env.TRAVIS !== 'true' || process.platform == 'darwin')
+        return done();
+
       var listener = function() {
         webview.removeEventListener('enter-html-full-screen', listener);
         done();
@@ -569,6 +568,9 @@ describe('<webview> tag', function() {
     });
 
     it('can return the result of the executed script', function(done) {
+      if (process.env.TRAVIS === 'true' && process.platform == 'darwin')
+        return done();
+
       var listener = function() {
         var jsScript = "'4'+2";
         webview.executeJavaScript(jsScript, false, function(result) {
@@ -640,12 +642,21 @@ describe('<webview> tag', function() {
   describe('found-in-page event', function() {
     it('emits when a request is made', function(done) {
       var requestId = null;
+      var totalMatches = null;
+      var activeMatchOrdinal = [];
       var listener = function(e) {
         assert.equal(e.result.requestId, requestId);
         if (e.result.finalUpdate) {
           assert.equal(e.result.matches, 3);
-          webview.stopFindInPage("clearSelection");
-          done();
+          totalMatches = e.result.matches;
+          listener2();
+        } else {
+          activeMatchOrdinal.push(e.result.activeMatchOrdinal);
+          if (e.result.activeMatchOrdinal == totalMatches) {
+            assert.deepEqual(activeMatchOrdinal, [1, 2, 3]);
+            webview.stopFindInPage("clearSelection");
+            done();
+          }
         }
       };
       var listener2 = function() {
